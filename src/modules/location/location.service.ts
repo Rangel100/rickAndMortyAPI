@@ -55,7 +55,7 @@ export class LocationService {
             };
 
             location = await this._locationModel.create(newLocation);
-            console.log(`Location created: ${location.name}`);
+            console.log('Location created');
         }
 
         return location;

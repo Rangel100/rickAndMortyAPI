@@ -1,14 +1,8 @@
 export async function mapResponse(responseToMap) {
     return responseToMap.map(data => {
         const plainData = data.get({ plain: true });
-
-        console.log('plainData antes', plainData.created);
-
         if (plainData.created) {
-
             plainData.created = new Date(plainData.created);
-            console.log('plainData despues', plainData.created);
-
         }
         return plainData;
     });
