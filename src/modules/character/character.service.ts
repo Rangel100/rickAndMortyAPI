@@ -218,7 +218,7 @@ export class CharacterService {
                     };
 
                     character = await this._characterModel.create(newCharacter);
-                    console.log(`Character created: ${character.name}`);
+                    console.log('Character created');
 
                     // Process episodes if they exist
                     if (apiCharacter.episode && apiCharacter.episode.length > 0) {
@@ -454,5 +454,96 @@ export class CharacterService {
             }
         }
         console.log('Characters updated successfully');
+    }
+
+    async initializeCharacters(): Promise<void> {
+        console.log('Checking if characters need to be initialized...');
+
+        // Check if database is empty
+        const charactersCount = await this._characterModel.count();
+        if (charactersCount > 0) {
+            console.log('Database already contains characters, skipping initialization');
+            return;
+        }
+
+        console.log('Database is empty, initializing with 15 characters...');
+        try {
+            // Get first 15 characters from API
+            const apiCharacters = await this.rickAndMortyApiService.getMultipleCharacters([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]);
+
+            for (const apiCharacter of apiCharacters) {
+                // Process origin location
+                let origin: Location | null = null;
+                if (apiCharacter.origin && apiCharacter.origin.name !== UNKNOWN_DATA) {
+                    const originUrl = apiCharacter.origin.url;
+                    if (originUrl) {
+                        const splitedOriginId = originUrl.split(LOCATION_ATTRIBUTE_URL).pop();
+                        const originId = parseInt(splitedOriginId);
+                        if (originId) {
+                            const locationData = await this.rickAndMortyApiService.getLocationById(originId);
+                            origin = await this.locationService.findOrCreateByExternalId(locationData);
+                        }
+                    }
+                }
+
+                // Process current location
+                let location: Location | null = null;
+                if (apiCharacter.location && apiCharacter.location.name !== UNKNOWN_DATA) {
+                    const locationUrl = apiCharacter.location.url;
+                    if (locationUrl) {
+                        const splitedLocationId = locationUrl.split(LOCATION_ATTRIBUTE_URL).pop();
+                        const locationId = parseInt(splitedLocationId);
+                        if (locationId) {
+                            const locationData = await this.rickAndMortyApiService.getLocationById(locationId);
+                            location = await this.locationService.findOrCreateByExternalId(locationData);
+                        }
+                    }
+                }
+
+                // Create character
+                const newCharacter = {
+                    id: apiCharacter.id,
+                    name: apiCharacter.name,
+                    status: apiCharacter.status,
+                    species: apiCharacter.species,
+                    type: apiCharacter.type,
+                    gender: apiCharacter.gender,
+                    image: apiCharacter.image,
+                    url: apiCharacter.url,
+                    created: new Date(apiCharacter.created),
+                    originId: origin ? origin.id : null,
+                    locationId: location ? location.id : null,
+                    createdDate: new Date(),
+                    rowStatus: ACTIVE_STATUS
+                };
+
+                const character = await this._characterModel.create(newCharacter);
+                console.log('Character created');
+
+                // Process episodes
+                if (apiCharacter.episode && apiCharacter.episode.length > 0) {
+                    const episodeIds = apiCharacter.episode.map(url =>
+                        parseInt(url.split(EPISODE_ATTRIBUTE_URL).pop())
+                    ).filter(id => !isNaN(id));
+
+                    if (episodeIds.length > 0) {
+                        const episodesData = await this.rickAndMortyApiService.getMultipleEpisodes(episodeIds);
+                        const episodes = await this.episodeService.findOrCreateMultipleByExternalIds(episodesData);
+
+                        if (episodes && episodes.length > 0) {
+                            const characterEpisodes = episodes.map(episode => ({
+                                characterId: character.id,
+                                episodeId: episode.id
+                            }));
+                            await this.characterEpisodeService.bulkCreate(characterEpisodes);
+                        }
+                    }
+                }
+            }
+            console.log('Successfully initialized 15 characters');
+        } catch (error) {
+            console.error('Error initializing characters:', error);
+            throw error;
+        }
     }
 }
