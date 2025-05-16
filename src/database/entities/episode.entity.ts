@@ -13,9 +13,6 @@ export class Episode extends Model {
     name: string;
 
     @Column
-    code: string;
-
-    @Column
     air_date: string;
 
     @Column

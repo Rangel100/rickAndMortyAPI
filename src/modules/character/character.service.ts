@@ -6,7 +6,7 @@ import { Location } from 'src/database/entities/location.entity';
 import { ACTIVE_STATUS, EPISODE_ATTRIBUTE_URL, LOCATION_ATTRIBUTE_URL, UNKNOWN_DATA } from 'src/utilities/constants';
 import { Cache } from 'cache-manager';
 import { Op } from 'sequelize';
-import { RickAndMortyApiService } from 'src/services/rick-and-morty-api.service';
+import { RickAndMortyApiService } from 'src/integrations/rick-and-morty-api.service';
 import { LocationService } from '../location/location.service';
 import { EpisodeService } from '../episode/episode.service';
 import { CharacterEpisodeService } from '../character-episode/character-episode.service';
@@ -299,5 +299,160 @@ export class CharacterService {
         }
 
         return [];
+    }
+
+    async updateCharactersInDatabase(): Promise<void> {
+        console.log('Updating characters in database over cron job');
+
+        // Get all characters from the database
+        const characters = await this._characterModel.findAll({
+            include: [
+                { association: 'origin' },
+                { association: 'location' },
+                { association: 'episodes' }
+            ]
+        });
+
+        if (!characters || characters.length === 0) {
+            console.log('No characters found in the database');
+            return;
+        }
+
+        const characterIds: number[] = characters.map(character => character.id);
+        console.log('Character IDs:', characterIds);
+
+        // Fetch characters from the API using the IDs
+        const apiCharacters = await this.rickAndMortyApiService.getMultipleCharacters(characterIds);
+
+        for (const apiCharacter of apiCharacters) {
+            // Get the character from the database
+            const character = characters.find(c => c.id === apiCharacter.id);
+            if (!character) continue;
+
+            console.log('Updating Character data from database.');
+            if (character.name !== apiCharacter.name ||
+                character.status !== apiCharacter.status ||
+                character.species !== apiCharacter.species ||
+                character.type !== apiCharacter.type ||
+                character.gender !== apiCharacter.gender ||
+                character.image !== apiCharacter.image) {
+                // Update the character in the database
+                this._characterModel.update(
+                    {
+                        name: apiCharacter.name,
+                        status: apiCharacter.status,
+                        species: apiCharacter.species,
+                        type: apiCharacter.type,
+                        gender: apiCharacter.gender,
+                        image: apiCharacter.image
+                    },
+                    { where: { id: character.id } }
+                );
+            }
+
+            console.log('Updating Character Origin and data from database.');
+            // Update the origin location if it exists
+            if (apiCharacter.origin && apiCharacter.origin.url !== "") {
+                const originUrl = apiCharacter.origin.url;
+                if (originUrl) {
+                    const splitedOriginId = originUrl.split(LOCATION_ATTRIBUTE_URL).pop();
+                    const originId = parseInt(splitedOriginId);
+                    if (originId) {
+                        const locationData = await this.rickAndMortyApiService.getLocationById(originId);
+                        const location = await this.locationService.findOrCreateByExternalId(locationData);
+
+                        // Update the character's origin in the database if location is not null
+                        if (location) {
+                            // Update the location in the database
+                            await this.locationService.updateLocation(location.id, locationData);
+
+                            await this._characterModel.update(
+                                { originId: location.id },
+                                { where: { id: character.id } }
+                            );
+                        }
+                    }
+                }
+            }
+
+            console.log('Updating Character Location and data from database.');
+            // Update the current location if it exists
+            if (apiCharacter.location && apiCharacter.location.url !== "") {
+                const locationUrl = apiCharacter.location.url;
+                if (locationUrl) {
+                    const splitedLocationId = locationUrl.split(LOCATION_ATTRIBUTE_URL).pop();
+                    const locationId = parseInt(splitedLocationId);
+                    if (locationId) {
+                        const locationData = await this.rickAndMortyApiService.getLocationById(locationId);
+                        const location = await this.locationService.findOrCreateByExternalId(locationData);
+
+                        // Update the character's location in the database if location is not null
+                        if (location) {
+                            // Update the location in the database
+                            await this.locationService.updateLocation(location.id, locationData);
+
+                            await this._characterModel.update(
+                                { locationId: location.id },
+                                { where: { id: character.id } }
+                            );
+                        }
+                    }
+                }
+            }
+
+            console.log('Updating Character Episodes from database.');
+            // Update the episodes if they exist
+            if (apiCharacter.episode && apiCharacter.episode.length > 0) {
+                // Extract episode IDs from URLs
+                const episodeIds = apiCharacter.episode.map(url =>
+                    parseInt(url.split(EPISODE_ATTRIBUTE_URL).pop())
+                ).filter(id => !isNaN(id));
+
+                if (episodeIds.length > 0) {
+                    // Get all episodes data from API
+                    const episodesData = await this.rickAndMortyApiService.getMultipleEpisodes(episodeIds);
+                    console.log('Episodes Fetched from API.');
+                    const episodes = await this.episodeService.findOrCreateMultipleByExternalIds(episodesData);
+                    console.log('Episodes Fetched from Database.');
+                    const existingEpisodes = await this.characterEpisodeService.findByCharacterId(character.id);
+                    console.log('Existing CharacterEpisodes Fetched from Database.');
+
+                    // Get the IDs of existing episodes in the database
+                    const existingEpisodeIds = existingEpisodes.map(ce => ce.dataValues.episodeId);
+                    console.log('Existing episode IDs for character', existingEpisodeIds);
+
+                    // Get the IDs of episodes from the API
+                    const apiEpisodeIds = episodes.map(episode => episode.id);
+                    console.log('API episode IDs for character ', apiEpisodeIds);
+
+                    // Find episodes that exist in the API but not in the database
+                    const episodesToCreate = episodes.filter(episode => !existingEpisodeIds.includes(episode.id));
+                    console.log('Episodes to create for character', episodesToCreate.length);
+
+                    if (episodesToCreate.length > 0) {
+                        console.log('Creating character-episode relations');
+                        // Create new character-episode relations
+                        const characterEpisodesToCreate = episodesToCreate.map(episode => ({
+                            characterId: character.id,
+                            episodeId: episode.id
+                        }));
+                        await this.characterEpisodeService.bulkCreate(characterEpisodesToCreate);
+                    }
+
+                    // find episodes that exist in the database but not in the API
+                    const episodeRelationsToDelete = existingEpisodes.filter(
+                        ce => !apiEpisodeIds.includes(ce.dataValues.episodeId)
+                    );
+                    console.log('Episodes relations to delete for character ', episodeRelationsToDelete.length);
+
+                    if (episodeRelationsToDelete.length > 0) {
+                        // Delete character-episode relations
+                        console.log('Deleting character-episode relations');
+                        await this.characterEpisodeService.bulkDelete(episodeRelationsToDelete);
+                    }
+                }
+            }
+        }
+        console.log('Characters updated successfully');
     }
 }

@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { CharacterEpisode } from 'src/database/entities/character-episode.entity';
-import { ACTIVE_STATUS } from 'src/utilities/constants';
+import { ACTIVE_STATUS, INACTIVE_STATUS } from 'src/utilities/constants';
 
 @Injectable()
 export class CharacterEpisodeService {
@@ -48,5 +48,21 @@ export class CharacterEpisodeService {
         }));
 
         return this._characterEpisodeModel.bulkCreate(characterEpisodes);
+    }
+
+    async bulkDelete(characterEpisodes: any[]): Promise<number> {
+        const ids = characterEpisodes.map(ce => ce.id);
+        //change status to inactive
+        return this._characterEpisodeModel.update(
+            {
+                rowStatus: INACTIVE_STATUS,
+                updatedDate: new Date()
+            },
+            {
+                where: {
+                    id: ids
+                }
+            }
+        ).then(([affectedCount]) => affectedCount);
     }
 }

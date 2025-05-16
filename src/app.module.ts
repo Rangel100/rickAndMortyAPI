@@ -8,6 +8,7 @@ import { EpisodeModule } from './modules/episode/episode.module';
 import { CharacterEpisodeModule } from './modules/character-episode/character-episode.module';
 import { CachingModule } from './cache/caching.module';
 import { LoggerMiddleware } from './middleware/logger.middleware';
+import { TasksModule } from './tasks/tasks.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { LoggerMiddleware } from './middleware/logger.middleware';
     LocationModule,
     EpisodeModule,
     CharacterEpisodeModule,
+    TasksModule,
   ],
   controllers: [AppController],
   providers: [AppService],

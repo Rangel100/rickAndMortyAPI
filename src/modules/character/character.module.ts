@@ -7,7 +7,7 @@ import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloFederationDriverConfig, ApolloFederationDriver, ApolloDriverConfig, ApolloDriver } from '@nestjs/apollo';
 import { CharacterResolver } from './character.resolver';
 import { join } from 'path';
-import { RickAndMortyApiService } from 'src/services/rick-and-morty-api.service';
+import { RickAndMortyApiService } from 'src/integrations/rick-and-morty-api.service';
 import { LocationModule } from '../location/location.module';
 import { EpisodeModule } from '../episode/episode.module';
 import { CharacterEpisodeModule } from '../character-episode/character-episode.module';

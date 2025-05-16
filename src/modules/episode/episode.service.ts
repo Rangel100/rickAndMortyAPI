@@ -4,7 +4,7 @@ import { Episode } from 'src/database/entities/episode.entity';
 import { ACTIVE_STATUS } from 'src/utilities/constants';
 import { Op } from 'sequelize';
 import { EpisodeFilterDto } from './dto/episode-filter.dto';
-import { RickAndMortyApiService } from 'src/services/rick-and-morty-api.service';
+import { RickAndMortyApiService } from 'src/integrations/rick-and-morty-api.service';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
 
@@ -62,6 +62,7 @@ export class EpisodeService {
     }
 
     async findOrCreateMultipleByExternalIds(episodesData: any[]): Promise<Episode[]> {
+        console.log('Finding or creating multiple episodes');
         if (!episodesData || episodesData.length === 0) {
             return [];
         }

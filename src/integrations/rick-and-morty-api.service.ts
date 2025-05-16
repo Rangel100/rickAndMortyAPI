@@ -10,7 +10,6 @@ export class RickAndMortyApiService {
         try {
             const url = `${this.baseUrl}${endpoint}`;
             console.log('Fetching from URL:', url);
-            console.log('With params:', params);
             const response = await axios.get(url, {
                 params,
             });
@@ -160,6 +159,13 @@ export class RickAndMortyApiService {
         if (ids.length === 0) return [];
         const idsString = ids.join(',');
         const response = await this.fetchFromAPI(`/location/${idsString}`);
+        return Array.isArray(response) ? response : [response];
+    }
+
+    async getMultipleCharacters(ids: number[]) {
+        if (ids.length === 0) return [];
+        const idsString = ids.join(',');
+        const response = await this.fetchFromAPI(`/character/${idsString}`);
         return Array.isArray(response) ? response : [response];
     }
 }

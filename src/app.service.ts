@@ -21,15 +21,7 @@ export class AppService {
 
   async getDataFromCache(): Promise<string> {
     // Recuperar datos del caché
-    await this._chracterService.getDataFromCache();
-
-    const cachedTestKey = await this._cacheService.get("testData");
-    console.log("Cached Test Key: ", cachedTestKey);
-
-    if (cachedTestKey) {
-      return `Datos recuperados de Redis: ${cachedTestKey}`;
-    } else {
-      return 'No se encontraron datos en el caché de Redis';
-    }
+    await this._chracterService.updateCharactersInDatabase();
+    return 'Characters updated in database!';
   }
 }

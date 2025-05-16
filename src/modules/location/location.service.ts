@@ -4,7 +4,7 @@ import { Location } from 'src/database/entities/location.entity';
 import { ACTIVE_STATUS } from 'src/utilities/constants';
 import { Op } from 'sequelize';
 import { LocationFilterDto } from './dto/location-filter.dto';
-import { RickAndMortyApiService } from 'src/services/rick-and-morty-api.service';
+import { RickAndMortyApiService } from 'src/integrations/rick-and-morty-api.service';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
 
@@ -161,4 +161,29 @@ export class LocationService {
             return [];
         }
     }
+
+    async updateLocation(id: number, locationData: any): Promise<void> {
+        const location = await this._locationModel.findByPk(id);
+
+        if (location) {
+            if (location.name !== locationData.name ||
+                location.type !== locationData.type ||
+                location.dimension !== locationData.dimension ||
+                location.url !== locationData.url
+            ) {
+                // Update the location with the new data
+                await this._locationModel.update({
+                    name: locationData.name,
+                    type: locationData.type,
+                    dimension: locationData.dimension,
+                    url: locationData.url,
+                    updatedDate: new Date()
+                }, {
+                    where: { id }
+                });
+            }
+        }
+
+    }
+
 }
