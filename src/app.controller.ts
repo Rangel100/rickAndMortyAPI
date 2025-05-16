@@ -1,6 +1,5 @@
-import { Controller, Get, UseInterceptors } from '@nestjs/common';
+import { Controller, Get } from '@nestjs/common';
 import { AppService } from './app.service';
-import { CacheInterceptor } from '@nestjs/cache-manager';
 
 @Controller()
 export class AppController {
@@ -13,9 +12,9 @@ export class AppController {
     return this.appService.getHello();
   }
 
-  @Get("hello")
-  async getHellow(): Promise<string> {
-    return this.appService.getDataFromCache();
+  @Get("scheduleTask")
+  async getScheduleTask(): Promise<string> {
+    return this.appService.getScheduleTask();
   }
 
 }

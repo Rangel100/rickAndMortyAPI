@@ -1,0 +1,176 @@
+{
+	"info": {
+		"_postman_id": "88d405a6-5c80-4711-bab5-f99d27e0745a",
+		"name": "Pruba Tecnica",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "44931901",
+		"_collection_link": "https://jhonatanrangel.postman.co/workspace/Blossom~ff28e550-2ea3-408f-ac82-af7335831ef4/collection/44931901-88d405a6-5c80-4711-bab5-f99d27e0745a?action=share&source=collection_link&creator=44931901"
+	},
+	"item": [
+		{
+			"name": "RAM API",
+			"item": [
+				{
+					"name": "1. getCharacters",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "",
+								"variables": ""
+							}
+						},
+						"url": {
+							"raw": "https://rickandmortyapi.com/api/character",
+							"protocol": "https",
+							"host": [
+								"rickandmortyapi",
+								"com"
+							],
+							"path": [
+								"api",
+								"character"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "2. getLocations",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://rickandmortyapi.com/api/location",
+							"protocol": "https",
+							"host": [
+								"rickandmortyapi",
+								"com"
+							],
+							"path": [
+								"api",
+								"location"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "3. getEpisodes",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://rickandmortyapi.com/api/episode",
+							"protocol": "https",
+							"host": [
+								"rickandmortyapi",
+								"com"
+							],
+							"path": [
+								"api",
+								"episode"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Hello world",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3000",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000"
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "run task",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3000/scheduleTask",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"scheduleTask"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GraphQL API",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "graphql",
+					"graphql": {
+						"query": "query CharactersByFilters {\r\n    charactersByFilters(\r\n        filters: {\r\n            name: \"Rick\"\r\n            status: \"Alive\"\r\n            species: \"Human\"\r\n            type: \"Superhuman (Ghost trains summoner)\"\r\n            gender: \"Male\"\r\n            origin: \"Abadango\"\r\n        }\r\n    ) {\r\n        id\r\n        origin {\r\n            id\r\n            name\r\n            type\r\n            dimension\r\n        }\r\n        location {\r\n            id\r\n            name\r\n            type\r\n            dimension\r\n        }\r\n        episodes {\r\n            id\r\n            name\r\n            air_date\r\n            episode\r\n        }\r\n        name\r\n        status\r\n        species\r\n        type\r\n        gender\r\n        image\r\n        url\r\n        created\r\n    }\r\n}\r\n",
+						"variables": ""
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3000/graphql",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"graphql"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "url",
+			"value": "",
+			"type": "string"
+		}
+	]
+}
