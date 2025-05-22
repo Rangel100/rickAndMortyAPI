@@ -10,10 +10,11 @@ import { CacheableMemory } from 'cacheable';
             isGlobal: true,
             useFactory: async () => {
                 return {
+                    ttl: 60000, // 10 minutes
                     stores: [
-                        new Keyv({
-                            store: new CacheableMemory({ ttl: 600000 }),
-                        }),
+                        // new Keyv({
+                        //     store: new CacheableMemory({ ttl: 600000 }),
+                        // }),
                         createKeyv('redis://localhost:6379'),
                     ],
                 };

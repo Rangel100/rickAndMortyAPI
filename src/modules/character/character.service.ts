@@ -38,7 +38,7 @@ export class CharacterService {
                 { association: 'episodes' }
             ]
         });
-        const charactersPlain = mapResponse(characters);
+        const charactersPlain = mapResponse(characters); 
         return charactersPlain;
     }
 
@@ -272,6 +272,11 @@ export class CharacterService {
     }
 
     async getCharactersByFilters(filters: CharacterFilterDto): Promise<Character[]> {
+        if (!filters || filters == null) {
+            console.log('No filters provided, returning all characters');
+            return this.findAllGraphQl();
+        }
+
         // Try to get data from cache
         console.log('Executing service characters by filters');
         const cacheData = await this.getDataFromCacheByFilters(filters);
